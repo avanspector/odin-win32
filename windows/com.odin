@@ -15,11 +15,47 @@ ADVANCED_FEATURE_FLAGS :: distinct bit_set[enum {
 }; u16]
 ADVANCED_FEATURE_FLAGS_RESERVED :: transmute(ADVANCED_FEATURE_FLAGS)u16(0xF008)
 
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/ns-objidl-bind_opts ]]
+BIND_OPTS :: struct {
+	cbStruct: u32,
+	grfFlags: u32,
+	grfMode: u32,
+	dwTickCountDeadline: u32,
+}
+
+BINDINFO :: struct {
+	cbSize: u32,
+	szExtraInfo: PWSTR,
+	stgmedData: STGMEDIUM,
+	grfBindInfoF: u32,
+	dwBindVerb: u32,
+	szCustomVerb: PWSTR,
+	cbstgmedData: u32,
+	dwOptions: u32,
+	dwOptionsFlags: u32,
+	dwCodePage: u32,
+	securityAttributes: SECURITY_ATTRIBUTES,
+	iid: GUID,
+	pUnk: ^IUnknown,
+	dwReserved: u32,
+}
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/ns-oaidl-bindptr ]]
 BINDPTR :: struct #raw_union {
 	lpfuncdesc: ^FUNCDESC,
 	lpvardesc: ^VARDESC,
 	lptcomp: ^ITypeComp,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/nspapi/ns-nspapi-blob ]]
+BLOB :: struct {
+	cbSize: u32,
+	pBlobData: ^u8,
+}
+
+BYTE_BLOB :: struct {
+	clSize: u32,
+	abData: [1]u8,
 }
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/ne-oaidl-callconv ]]
@@ -77,6 +113,26 @@ DISPPARAMS :: struct {
 	cNamedArgs: u32,
 }
 
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/wtypes/ne-wtypes-dvaspect ]]
+DVASPECT :: enum u32 {
+	CONTENT = 0x00000001,
+	THUMBNAIL = 0x00000002,
+	ICON = 0x00000004,
+	DOCPRINT = 0x00000008,
+	OPAQUE = 0x00000010,
+	TRANSPARENT = 0x00000020,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/ns-objidl-dvtargetdevice ]]
+DVTARGETDEVICE :: struct {
+	tdSize: u32,
+	tdDriverNameOffset: u16,
+	tdDeviceNameOffset: u16,
+	tdPortNameOffset: u16,
+	tdExtDevmodeOffset: u16,
+	tdData: [1]u8,
+}
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/ns-oaidl-elemdesc~r1 ]]
 ELEMDESC :: struct {
 	tdesc: TYPEDESC,
@@ -97,6 +153,15 @@ EXCEPINFO :: struct {
 	pvReserved: rawptr,
 	pfnDeferredFillIn: LPEXCEPFINO_DEFERRED_FILLIN,
 	scode: i32,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/ns-objidl-formatetc ]]
+FORMATETC :: struct {
+	cfFormat: u16,
+	ptd: ^DVTARGETDEVICE,
+	dwAspect: u32,
+	lindex: i32,
+	tymed: u32,
 }
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/ns-oaidl-funcdesc ]]
@@ -141,6 +206,91 @@ FUNCKIND :: enum i32 {
 	DISPATCH = 4,
 }
 
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-iadvisesink ]]
+IAdviseSink :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IAdviseSink_Vtbl,
+}
+IAdviseSink_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	OnDataChange: proc "system" (this: ^IAdviseSink, pFormatetc: ^FORMATETC, pStgmed: ^STGMEDIUM),
+	OnViewChange: proc "system" (this: ^IAdviseSink, dwAspect: u32, lindex: i32),
+	OnRename: proc "system" (this: ^IAdviseSink, pmk: ^IMoniker),
+	OnSave: proc "system" (this: ^IAdviseSink),
+	OnClose: proc "system" (this: ^IAdviseSink),
+}
+IID_IAdviseSink :: GUID{0x0000010F, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-ibindctx ]]
+IBindCtx :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IBindCtx_Vtbl,
+}
+IBindCtx_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	RegisterObjectBound: proc "system" (this: ^IBindCtx, punk: ^IUnknown) -> HRESULT,
+	RevokeObjectBound: proc "system" (this: ^IBindCtx, punk: ^IUnknown) -> HRESULT,
+	ReleaseBoundObjects: proc "system" (this: ^IBindCtx) -> HRESULT,
+	SetBindOptions: proc "system" (this: ^IBindCtx, pbindopts: ^BIND_OPTS) -> HRESULT,
+	GetBindOptions: proc "system" (this: ^IBindCtx, pbindopts: ^BIND_OPTS) -> HRESULT,
+	GetRunningObjectTable: proc "system" (this: ^IBindCtx, pprot: ^^IRunningObjectTable) -> HRESULT,
+	RegisterObjectParam: proc "system" (this: ^IBindCtx, pszKey: PWSTR, punk: ^IUnknown) -> HRESULT,
+	GetObjectParam: proc "system" (this: ^IBindCtx, pszKey: PWSTR, ppunk: ^^IUnknown) -> HRESULT,
+	EnumObjectParam: proc "system" (this: ^IBindCtx, ppenum: ^^IEnumString) -> HRESULT,
+	RevokeObjectParam: proc "system" (this: ^IBindCtx, pszKey: PWSTR) -> HRESULT,
+}
+IID_IBindCtx :: GUID{0x0000000E, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+IBinding :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IBinding_Vtbl,
+}
+IBinding_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Abort: proc "system" (this: ^IBinding) -> HRESULT,
+	Suspend: proc "system" (this: ^IBinding) -> HRESULT,
+	Resume: proc "system" (this: ^IBinding) -> HRESULT,
+	SetPriority: proc "system" (this: ^IBinding, nPriority: i32) -> HRESULT,
+	GetPriority: proc "system" (this: ^IBinding, pnPriority: ^i32) -> HRESULT,
+	GetBindResult: proc "system" (
+		this: ^IBinding,
+		pclsidProtocol: ^GUID,
+		pdwResult: ^u32,
+		pszResult: ^PWSTR,
+		pdwReserved: ^u32,
+	) -> HRESULT,
+}
+IID_IBinding :: GUID{0x79EAC9C0, 0xBAF9, 0x11CE, {0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B}}
+
+IBindStatusCallback :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IBindStatusCallback_Vtbl,
+}
+IBindStatusCallback_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	OnStartBinding: proc "system" (this: ^IBindStatusCallback, dwReserved: u32, pib: ^IBinding) -> HRESULT,
+	GetPriority: proc "system" (this: ^IBindStatusCallback, pnPriority: ^i32) -> HRESULT,
+	OnLowResource: proc "system" (this: ^IBindStatusCallback, reserved: u32) -> HRESULT,
+	OnProgress: proc "system" (
+		this: ^IBindStatusCallback,
+		ulProgress: u32,
+		ulProgressMax: u32,
+		ulStatusCode: u32,
+		szStatusText: PWSTR,
+	) -> HRESULT,
+	OnStopBinding: proc "system" (this: ^IBindStatusCallback, hresult: HRESULT, szError: PWSTR) -> HRESULT,
+	GetBindInfo: proc "system" (this: ^IBindStatusCallback, grfBINDF: ^u32, pbindinfo: ^BINDINFO) -> HRESULT,
+	OnDataAvailable: proc "system" (
+		this: ^IBindStatusCallback,
+		grfBSCF: u32,
+		dwSize: u32,
+		pformatetc: ^FORMATETC,
+		pstgmed: ^STGMEDIUM,
+	) -> HRESULT,
+	OnObjectAvailable: proc "system" (this: ^IBindStatusCallback, #by_ptr riid: GUID, punk: ^IUnknown) -> HRESULT,
+}
+IID_IBindStatusCallback :: GUID{0x79EAC9C1, 0xBAF9, 0x11CE, {0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B}}
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/ocidl/nn-ocidl-iconnectionpoint ]]
 IConnectionPoint :: struct #raw_union {
 	#subtype IUnknown: IUnknown,
@@ -171,6 +321,36 @@ IConnectionPointContainer_Vtbl :: struct {
 	) -> HRESULT,
 }
 IID_IConnectionPointContainer :: GUID{0xB196B284, 0xBAB4, 0x101A, {0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-idataobject ]]
+IDataObject :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IDataObject_Vtbl,
+}
+IDataObject_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	GetData: proc "system" (this: ^IDataObject, pformatetcIn: ^FORMATETC, pmedium: ^STGMEDIUM) -> HRESULT,
+	GetDataHere: proc "system" (this: ^IDataObject, pformatetc: ^FORMATETC, pmedium: ^STGMEDIUM) -> HRESULT,
+	QueryGetData: proc "system" (this: ^IDataObject, pformatetc: ^FORMATETC) -> HRESULT,
+	GetCanonicalFormatEtc: proc "system" (this: ^IDataObject, pformatectIn: ^FORMATETC, pformatetcOut: ^FORMATETC) -> HRESULT,
+	SetData: proc "system" (
+		this: ^IDataObject,
+		pformatetc: ^FORMATETC,
+		pmedium: ^STGMEDIUM,
+		fRelease: BOOL,
+	) -> HRESULT,
+	EnumFormatEtc: proc "system" (this: ^IDataObject, dwDirection: u32, ppenumFormatEtc: ^^IEnumFORMATETC) -> HRESULT,
+	DAdvise: proc "system" (
+		this: ^IDataObject,
+		pformatetc: ^FORMATETC,
+		advf: u32,
+		pAdvSink: ^IAdviseSink,
+		pdwConnection: ^u32,
+	) -> HRESULT,
+	DUnadvise: proc "system" (this: ^IDataObject, dwConnection: u32) -> HRESULT,
+	EnumDAdvise: proc "system" (this: ^IDataObject, ppenumAdvise: ^^IEnumSTATDATA) -> HRESULT,
+}
+IID_IDataObject :: GUID{0x0000010E, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/nn-oaidl-idispatch ]]
 IDispatch :: struct #raw_union {
@@ -254,6 +434,62 @@ IEnumConnections_Vtbl :: struct {
 }
 IID_IEnumConnections :: GUID{0xB196B287, 0xBAB4, 0x101A, {0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-ienumformatetc ]]
+IEnumFORMATETC :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IEnumFORMATETC_Vtbl,
+}
+IEnumFORMATETC_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Next: proc "system" (this: ^IEnumFORMATETC, celt: u32, rgelt: [^]FORMATETC, pceltFetched: ^u32) -> HRESULT,
+	Skip: proc "system" (this: ^IEnumFORMATETC, celt: u32) -> HRESULT,
+	Reset: proc "system" (this: ^IEnumFORMATETC) -> HRESULT,
+	Clone: proc "system" (this: ^IEnumFORMATETC, ppenum: ^^IEnumFORMATETC) -> HRESULT,
+}
+IID_IEnumFORMATETC :: GUID{0x00000103, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/comcat/nn-comcat-ienumguid ]]
+IEnumGUID :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IEnumGUID_Vtbl,
+}
+IEnumGUID_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Next: proc "system" (this: ^IEnumGUID, celt: u32, rgelt: [^]GUID, pceltFetched: ^u32) -> HRESULT,
+	Skip: proc "system" (this: ^IEnumGUID, celt: u32) -> HRESULT,
+	Reset: proc "system" (this: ^IEnumGUID) -> HRESULT,
+	Clone: proc "system" (this: ^IEnumGUID, ppenum: ^^IEnumGUID) -> HRESULT,
+}
+IID_IEnumGUID :: GUID{0x0002E000, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-ienummoniker ]]
+IEnumMoniker :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IEnumMoniker_Vtbl,
+}
+IEnumMoniker_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Next: proc "system" (this: ^IEnumMoniker, celt: u32, rgelt: [^]^IMoniker, pceltFetched: ^u32) -> HRESULT,
+	Skip: proc "system" (this: ^IEnumMoniker, celt: u32) -> HRESULT,
+	Reset: proc "system" (this: ^IEnumMoniker) -> HRESULT,
+	Clone: proc "system" (this: ^IEnumMoniker, ppenum: ^^IEnumMoniker) -> HRESULT,
+}
+IID_IEnumMoniker :: GUID{0x00000102, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-ienumstatdata ]]
+IEnumSTATDATA :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IEnumSTATDATA_Vtbl,
+}
+IEnumSTATDATA_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Next: proc "system" (this: ^IEnumSTATDATA, celt: u32, rgelt: [^]STATDATA, pceltFetched: ^u32) -> HRESULT,
+	Skip: proc "system" (this: ^IEnumSTATDATA, celt: u32) -> HRESULT,
+	Reset: proc "system" (this: ^IEnumSTATDATA) -> HRESULT,
+	Clone: proc "system" (this: ^IEnumSTATDATA, ppenum: ^^IEnumSTATDATA) -> HRESULT,
+}
+IID_IEnumSTATDATA :: GUID{0x00000105, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidlbase/nn-objidlbase-ienumstring ]]
 IEnumString :: struct #raw_union {
 	#subtype IUnknown: IUnknown,
@@ -267,6 +503,107 @@ IEnumString_Vtbl :: struct {
 	Clone: proc "system" (this: ^IEnumString, ppenum: ^^IEnumString) -> HRESULT,
 }
 IID_IEnumString :: GUID{0x00000101, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidlbase/nn-objidlbase-ienumunknown ]]
+IEnumUnknown :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IEnumUnknown_Vtbl,
+}
+IEnumUnknown_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Next: proc "system" (this: ^IEnumUnknown, celt: u32, rgelt: [^]^IUnknown, pceltFetched: ^u32) -> HRESULT,
+	Skip: proc "system" (this: ^IEnumUnknown, celt: u32) -> HRESULT,
+	Reset: proc "system" (this: ^IEnumUnknown) -> HRESULT,
+	Clone: proc "system" (this: ^IEnumUnknown, ppenum: ^^IEnumUnknown) -> HRESULT,
+}
+IID_IEnumUnknown :: GUID{0x00000100, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/nn-oaidl-ierrorlog ]]
+IErrorLog :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IErrorLog_Vtbl,
+}
+IErrorLog_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	AddError: proc "system" (this: ^IErrorLog, pszPropName: PWSTR, pExcepInfo: ^EXCEPINFO) -> HRESULT,
+}
+IID_IErrorLog :: GUID{0x3127CA40, 0x446E, 0x11CE, {0x81, 0x35, 0x00, 0xAA, 0x00, 0x4B, 0xB8, 0x51}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidlbase/nn-objidlbase-imalloc ]]
+IMalloc :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IMalloc_Vtbl,
+}
+IMalloc_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Alloc: proc "system" (this: ^IMalloc, cb: uintptr) -> rawptr,
+	Realloc: proc "system" (this: ^IMalloc, pv: rawptr, cb: uintptr) -> rawptr,
+	Free: proc "system" (this: ^IMalloc, pv: rawptr),
+	GetSize: proc "system" (this: ^IMalloc, pv: rawptr) -> uintptr,
+	DidAlloc: proc "system" (this: ^IMalloc, pv: rawptr) -> i32,
+	HeapMinimize: proc "system" (this: ^IMalloc),
+}
+IID_IMalloc :: GUID{0x00000002, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-imoniker ]]
+IMoniker :: struct #raw_union {
+	#subtype IPersistStream: IPersistStream,
+	using Vtbl: ^IMoniker_Vtbl,
+}
+IMoniker_Vtbl :: struct {
+	using IPersistStream_Vtbl: IPersistStream_Vtbl,
+	BindToObject: proc "system" (
+		this: ^IMoniker,
+		pbc: ^IBindCtx,
+		pmkToLeft: ^IMoniker,
+		#by_ptr riidResult: GUID,
+		ppvResult: rawptr,
+	) -> HRESULT,
+	BindToStorage: proc "system" (
+		this: ^IMoniker,
+		pbc: ^IBindCtx,
+		pmkToLeft: ^IMoniker,
+		#by_ptr riid: GUID,
+		ppvObj: rawptr,
+	) -> HRESULT,
+	Reduce: proc "system" (
+		this: ^IMoniker,
+		pbc: ^IBindCtx,
+		dwReduceHowFar: u32,
+		ppmkToLeft: ^^IMoniker,
+		ppmkReduced: ^^IMoniker,
+	) -> HRESULT,
+	ComposeWith: proc "system" (
+		this: ^IMoniker,
+		pmkRight: ^IMoniker,
+		fOnlyIfNotGeneric: BOOL,
+		ppmkComposite: ^^IMoniker,
+	) -> HRESULT,
+	Enum: proc "system" (this: ^IMoniker, fForward: BOOL, ppenumMoniker: ^^IEnumMoniker) -> HRESULT,
+	IsEqual: proc "system" (this: ^IMoniker, pmkOtherMoniker: ^IMoniker) -> HRESULT,
+	Hash: proc "system" (this: ^IMoniker, pdwHash: ^u32) -> HRESULT,
+	IsRunning: proc "system" (
+		this: ^IMoniker,
+		pbc: ^IBindCtx,
+		pmkToLeft: ^IMoniker,
+		pmkNewlyRunning: ^IMoniker,
+	) -> HRESULT,
+	GetTimeOfLastChange: proc "system" (this: ^IMoniker, pbc: ^IBindCtx, pmkToLeft: ^IMoniker, pFileTime: ^FILETIME) -> HRESULT,
+	Inverse: proc "system" (this: ^IMoniker, ppmk: ^^IMoniker) -> HRESULT,
+	CommonPrefixWith: proc "system" (this: ^IMoniker, pmkOther: ^IMoniker, ppmkPrefix: ^^IMoniker) -> HRESULT,
+	RelativePathTo: proc "system" (this: ^IMoniker, pmkOther: ^IMoniker, ppmkRelPath: ^^IMoniker) -> HRESULT,
+	GetDisplayName: proc "system" (this: ^IMoniker, pbc: ^IBindCtx, pmkToLeft: ^IMoniker, ppszDisplayName: ^PWSTR) -> HRESULT,
+	ParseDisplayName: proc "system" (
+		this: ^IMoniker,
+		pbc: ^IBindCtx,
+		pmkToLeft: ^IMoniker,
+		pszDisplayName: PWSTR,
+		pchEaten: ^u32,
+		ppmkOut: ^^IMoniker,
+	) -> HRESULT,
+	IsSystemMoniker: proc "system" (this: ^IMoniker, pdwMksys: ^u32) -> HRESULT,
+}
+IID_IMoniker :: GUID{0x0000000F, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
 IMPLTYPEFLAGS :: distinct bit_set[enum {
 	FDEFAULT = 0,
@@ -283,6 +620,58 @@ INVOKEKIND :: enum i32 {
 	PROPERTYPUTREF = 8,
 }
 
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-ipersist ]]
+IPersist :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IPersist_Vtbl,
+}
+IPersist_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	GetClassID: proc "system" (this: ^IPersist, pClassID: ^GUID) -> HRESULT,
+}
+IID_IPersist :: GUID{0x0000010C, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-ipersiststream ]]
+IPersistStream :: struct #raw_union {
+	#subtype IPersist: IPersist,
+	using Vtbl: ^IPersistStream_Vtbl,
+}
+IPersistStream_Vtbl :: struct {
+	using IPersist_Vtbl: IPersist_Vtbl,
+	IsDirty: proc "system" (this: ^IPersistStream) -> HRESULT,
+	Load: proc "system" (this: ^IPersistStream, pStm: ^IStream) -> HRESULT,
+	Save: proc "system" (this: ^IPersistStream, pStm: ^IStream, fClearDirty: BOOL) -> HRESULT,
+	GetSizeMax: proc "system" (this: ^IPersistStream, pcbSize: ^u64) -> HRESULT,
+}
+IID_IPersistStream :: GUID{0x00000109, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-irunningobjecttable ]]
+IRunningObjectTable :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IRunningObjectTable_Vtbl,
+}
+IRunningObjectTable_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	Register: proc "system" (
+		this: ^IRunningObjectTable,
+		grfFlags: ROT_FLAGS,
+		punkObject: ^IUnknown,
+		pmkObjectName: ^IMoniker,
+		pdwRegister: ^u32,
+	) -> HRESULT,
+	Revoke: proc "system" (this: ^IRunningObjectTable, dwRegister: u32) -> HRESULT,
+	IsRunning: proc "system" (this: ^IRunningObjectTable, pmkObjectName: ^IMoniker) -> HRESULT,
+	GetObject: proc "system" (
+		this: ^IRunningObjectTable,
+		pmkObjectName: ^IMoniker,
+		ppunkObject: ^^IUnknown,
+	) -> HRESULT,
+	NoteChangeTime: proc "system" (this: ^IRunningObjectTable, dwRegister: u32, pfiletime: ^FILETIME) -> HRESULT,
+	GetTimeOfLastChange: proc "system" (this: ^IRunningObjectTable, pmkObjectName: ^IMoniker, pfiletime: ^FILETIME) -> HRESULT,
+	EnumRunning: proc "system" (this: ^IRunningObjectTable, ppenumMoniker: ^^IEnumMoniker) -> HRESULT,
+}
+IID_IRunningObjectTable :: GUID{0x00000010, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-isequentialstream ]]
 ISequentialStream :: struct #raw_union {
 	#subtype IUnknown: IUnknown,
@@ -294,6 +683,22 @@ ISequentialStream_Vtbl :: struct {
 	Write: proc "system" (this: ^ISequentialStream, pv: rawptr, cb: u32, pcbWritten: ^u32) -> HRESULT,
 }
 IID_ISequentialStream :: GUID{0x0C733A30, 0x2A1C, 0x11CE, {0xAD, 0xE5, 0x00, 0xAA, 0x00, 0x44, 0x77, 0x3D}}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/servprov/nn-servprov-iserviceprovider ]]
+IServiceProvider :: struct #raw_union {
+	#subtype IUnknown: IUnknown,
+	using Vtbl: ^IServiceProvider_Vtbl,
+}
+IServiceProvider_Vtbl :: struct {
+	using IUnknown_Vtbl: IUnknown_Vtbl,
+	QueryService: proc "system" (
+		this: ^IServiceProvider,
+		#by_ptr guidService: GUID,
+		#by_ptr riid: GUID,
+		ppvObject: rawptr,
+	) -> HRESULT,
+}
+IID_IServiceProvider :: GUID{0x6D5140C1, 0x7436, 0x11CE, {0x80, 0x34, 0x00, 0xAA, 0x00, 0x60, 0x09, 0xFA}}
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-istream ]]
 IStream :: struct #raw_union {
@@ -446,6 +851,11 @@ LOCKTYPE :: enum i32 {
 
 LPEXCEPFINO_DEFERRED_FILLIN :: #type proc "system" (pExcepInfo: ^EXCEPINFO) -> HRESULT
 
+ROT_FLAGS :: distinct bit_set[enum {
+	REGISTRATIONKEEPSALIVE = 0,
+	ALLOWANYCLIENT = 1,
+}; u32]
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/ns-oaidl-safearray ]]
 SAFEARRAY :: struct {
 	cDims: u16,
@@ -460,6 +870,14 @@ SAFEARRAY :: struct {
 SAFEARRAYBOUND :: struct {
 	cElements: u32,
 	lLbound: i32,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/ns-objidl-statdata ]]
+STATDATA :: struct {
+	formatetc: FORMATETC,
+	advf: u32,
+	pAdvSink: ^IAdviseSink,
+	dwConnection: u32,
 }
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/wtypes/ne-wtypes-statflag ]]
@@ -515,6 +933,20 @@ STGM_READ :: transmute(STGM)u32(0x00000000)
 STGM_SHARE_DENY_READ :: transmute(STGM)u32(0x00000030)
 STGM_FAILIFTHERE :: transmute(STGM)u32(0x00000000)
 
+STGMEDIUM :: struct {
+	tymed: TYMED,
+	u: struct #raw_union {
+		hBitmap: HBITMAP,
+		hMetaFilePict: rawptr,
+		hEnhMetaFile: HENHMETAFILE,
+		hGlobal: HGLOBAL,
+		lpszFileName: PWSTR,
+		pstm: ^IStream,
+		pstg: ^IStorage,
+	},
+	pUnkForRelease: ^IUnknown,
+}
+
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/ne-objidl-stream_seek ]]
 STREAM_SEEK :: enum u32 {
 	SET = 0x00000000,
@@ -538,6 +970,18 @@ TLIBATTR :: struct {
 	wMajorVerNum: u16,
 	wMinorVerNum: u16,
 	wLibFlags: u16,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/objidl/ne-objidl-tymed ]]
+TYMED :: enum i32 {
+	HGLOBAL = 1,
+	FILE = 2,
+	ISTREAM = 4,
+	ISTORAGE = 8,
+	GDI = 16,
+	MFPICT = 32,
+	ENHMF = 64,
+	NULL = 0,
 }
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/oaidl/ns-oaidl-typeattr ]]

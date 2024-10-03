@@ -47,11 +47,100 @@ ETO_OPTIONS :: distinct bit_set[enum {
 	REVERSE_INDEX_MAP = 16,
 }; u32]
 
+FONT_CHARSET :: enum u8 {
+	ANSI_CHARSET = 0x00,
+	DEFAULT_CHARSET = 0x01,
+	SYMBOL_CHARSET = 0x02,
+	SHIFTJIS_CHARSET = 0x80,
+	HANGEUL_CHARSET = 0x81,
+	HANGUL_CHARSET = 0x81,
+	GB2312_CHARSET = 0x86,
+	CHINESEBIG5_CHARSET = 0x88,
+	OEM_CHARSET = 0xFF,
+	JOHAB_CHARSET = 0x82,
+	HEBREW_CHARSET = 0xB1,
+	ARABIC_CHARSET = 0xB2,
+	GREEK_CHARSET = 0xA1,
+	TURKISH_CHARSET = 0xA2,
+	VIETNAMESE_CHARSET = 0xA3,
+	THAI_CHARSET = 0xDE,
+	EASTEUROPE_CHARSET = 0xEE,
+	RUSSIAN_CHARSET = 0xCC,
+	MAC_CHARSET = 0x4D,
+	BALTIC_CHARSET = 0xBA,
+}
+
+FONT_CLIP_PRECISION :: distinct bit_set[enum {
+	CHARACTER_PRECIS = 0,
+	STROKE_PRECIS = 1,
+	LH_ANGLES = 4,
+	TT_ALWAYS = 5,
+	DFA_DISABLE = 6,
+	EMBEDDED = 7,
+	DFA_OVERRIDE = 6,
+}; u8]
+FONT_CLIP_PRECISION_DEFAULT_PRECIS :: transmute(FONT_CLIP_PRECISION)u8(0x00)
+FONT_CLIP_PRECISION_MASK :: transmute(FONT_CLIP_PRECISION)u8(0x0F)
+
+FONT_OUTPUT_PRECISION :: enum u8 {
+	DEFAULT_PRECIS = 0x00,
+	STRING_PRECIS = 0x01,
+	CHARACTER_PRECIS = 0x02,
+	STROKE_PRECIS = 0x03,
+	TT_PRECIS = 0x04,
+	DEVICE_PRECIS = 0x05,
+	RASTER_PRECIS = 0x06,
+	TT_ONLY_PRECIS = 0x07,
+	OUTLINE_PRECIS = 0x08,
+	SCREEN_OUTLINE_PRECIS = 0x09,
+	PS_ONLY_PRECIS = 0x0A,
+}
+
+FONT_QUALITY :: enum u8 {
+	DEFAULT_QUALITY = 0x00,
+	DRAFT_QUALITY = 0x01,
+	PROOF_QUALITY = 0x02,
+	NONANTIALIASED_QUALITY = 0x03,
+	ANTIALIASED_QUALITY = 0x04,
+	CLEARTYPE_QUALITY = 0x05,
+}
+
+HBITMAP :: rawptr
+
 HDC :: rawptr
+
+HENHMETAFILE :: rawptr
 
 HFONT :: rawptr
 
 HMONITOR :: rawptr
+
+HPALETTE :: rawptr
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/shtypes/ns-shtypes-logfontw ]]
+LOGFONTW :: struct {
+	lfHeight: i32,
+	lfWidth: i32,
+	lfEscapement: i32,
+	lfOrientation: i32,
+	lfWeight: i32,
+	lfItalic: u8,
+	lfUnderline: u8,
+	lfStrikeOut: u8,
+	lfCharSet: FONT_CHARSET,
+	lfOutPrecision: FONT_OUTPUT_PRECISION,
+	lfClipPrecision: FONT_CLIP_PRECISION,
+	lfQuality: FONT_QUALITY,
+	lfPitchAndFamily: u8,
+	lfFaceName: [32]u16,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-logpalette ]]
+LOGPALETTE :: struct {
+	palVersion: u16,
+	palNumEntries: u16,
+	palPalEntry: [1]PALETTEENTRY,
+}
 
 // [[ Documentation; https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-newtextmetrica ]]
 NEWTEXTMETRICA :: struct {
@@ -107,6 +196,14 @@ NEWTEXTMETRICW :: struct {
 	ntmSizeEM: u32,
 	ntmCellHeight: u32,
 	ntmAvgWidth: u32,
+}
+
+// [[ Documentation; https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-paletteentry ]]
+PALETTEENTRY :: struct {
+	peRed: u8,
+	peGreen: u8,
+	peBlue: u8,
+	peFlags: u8,
 }
 
 TMPF_FLAGS :: distinct bit_set[enum {

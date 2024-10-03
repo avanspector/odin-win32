@@ -26,6 +26,9 @@ var dependencies = new Dictionary<string, HashSet<TypeDefinition>>();
 var exceptions = new HashSet<string>
 {
 	"D3DDisassemble10Effect",
+	"IInputPaneAnimationCoordinator",
+	"IPublishingWizard",
+	"IShellImageData",
 	"InitializeSListHead",
 	"InterlockedFlushSList",
 	"InterlockedPopEntrySList",
@@ -53,6 +56,8 @@ var namespaces = new HashSet<string>
 	"Windows.Win32.System.Performance",
 	"Windows.Win32.System.SystemInformation",
 	"Windows.Win32.System.Threading",
+	"Windows.Win32.UI.Shell",
+	"Windows.Win32.UI.Shell.Common",
 };
 
 var packageAliases = new Dictionary<string, HashSet<string>>
@@ -83,20 +88,33 @@ string MapNamespaceToPackage(string ns)
 		"Windows.Win32.Foundation" or
 		"Windows.Win32.Globalization" or
 		"Windows.Win32.Graphics.Gdi" or
+		"Windows.Win32.Networking.WinSock" or
+		"Windows.Win32.NetworkManagement.IpHelper" or
+		"Windows.Win32.NetworkManagement.WNet" or
 		"Windows.Win32.Security" or
 		"Windows.Win32.Security.Cryptography" or
 		"Windows.Win32.Storage.FileSystem" or
 		"Windows.Win32.System.Com" or
+		"Windows.Win32.System.Com.StructuredStorage" or
+		"Windows.Win32.System.Com.Urlmon" or
 		"Windows.Win32.System.Console" or
 		"Windows.Win32.System.IO" or
 		"Windows.Win32.System.Kernel" or
 		"Windows.Win32.System.Memory" or
 		"Windows.Win32.System.Ole" or
 		"Windows.Win32.System.Performance" or
+		"Windows.Win32.System.Registry" or
+		"Windows.Win32.System.Search" or
+		"Windows.Win32.System.Search.Common" or
 		"Windows.Win32.System.SystemInformation" or
 		"Windows.Win32.System.SystemServices" or
 		"Windows.Win32.System.Threading" or
-		"Windows.Win32.System.Variant" => "win32",
+		"Windows.Win32.System.Variant" or
+		"Windows.Win32.UI.Controls" or
+		"Windows.Win32.UI.Shell" or
+		"Windows.Win32.UI.Shell.Common" or
+		"Windows.Win32.UI.Shell.PropertiesSystem" or
+		"Windows.Win32.UI.WindowsAndMessaging" => "win32",
 		_ => "",
 	};
 };
@@ -148,7 +166,7 @@ foreach (var ns in namespaces)
 	{
 		lastPeriod = ns.Substring(0, lastPeriod).LastIndexOf('.');
 	}
-	var file = ns.Substring(ns.LastIndexOf('.') + 1).ToLower().Replace('.', '_');
+	var file = ns.Substring(lastPeriod + 1).ToLower().Replace('.', '_');
 	file = $"{windowsDir}/{file}.odin";
 	using var fs = File.CreateText(file);
 
@@ -182,7 +200,8 @@ foreach (var ns in namespaces)
 
 for (var i = 0; i < 5; i++)
 {
-	foreach (var (ns, ts) in dependencies)
+	var d = new Dictionary<string, HashSet<TypeDefinition>>(dependencies);
+	foreach (var (ns, ts) in d)
 	{
 		currPkg = MapNamespaceToPackage(ns);
 		Debug.Assert(currPkg != "");
@@ -196,7 +215,7 @@ for (var i = 0; i < 5; i++)
 			{
 				lastPeriod = ns.Substring(0, lastPeriod).LastIndexOf('.');
 			}
-			var file = ns.Substring(ns.LastIndexOf('.') + 1).ToLower().Replace('.', '_');
+			var file = ns.Substring(lastPeriod + 1).ToLower().Replace('.', '_');
 			file = $"{windowsDir}/{file}.odin";
 			using var fs = File.CreateText(file);
 
@@ -1219,6 +1238,9 @@ static class Fix
 			"api-ms-win-core-memory-l1-1-6.dll" => "onecore.lib",
 			"api-ms-win-core-memory-l1-1-7.dll" => "onecore.lib",
 			"api-ms-win-core-memory-l1-1-8.dll" => "onecore.lib",
+			"api-ms-win-core-path-l1-1-0.dll" => "pathcch.lib",
+			"api-ms-win-core-psm-appnotify-l1-1-0.dll" or
+			"api-ms-win-core-psm-appnotify-l1-1-1.dll" => "appnotify.lib",
 			"api-ms-win-core-synch-l1-2-0.dll" => "synchronization.lib",
 			"api-ms-win-core-sysinfo-l1-2-0.dll" => "onecore.lib",
 			"api-ms-win-core-sysinfo-l1-2-3.dll" => "onecore.lib",
@@ -1226,6 +1248,9 @@ static class Fix
 			"api-ms-win-core-sysinfo-l1-2-6.dll" => "onecore.lib",
 			"api-ms-win-core-wow64-l1-1-1.dll" => "onecore.lib",
 			"api-ms-win-security-base-l1-2-2.dll" => "advapi32.lib",
+			"api-ms-win-shcore-scaling-l1-1-0.dll" or
+			"api-ms-win-shcore-scaling-l1-1-1.dll" or
+			"api-ms-win-shcore-scaling-l1-1-2.dll" => "shcore.lib",
 			"d3dcompiler_47.dll" => "d3dcompiler.lib",
 			"icuin.dll" or
 			"icuuc.dll" => "icu.lib",
